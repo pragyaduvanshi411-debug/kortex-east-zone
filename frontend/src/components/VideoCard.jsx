@@ -1,4 +1,5 @@
-import { Play, Trash2, Clock, BarChart } from 'lucide-react'
+import { useState } from 'react'
+import { Play, Trash2, Clock, BarChart, Video } from 'lucide-react'
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -20,18 +21,34 @@ function VideoCard({ video, isAdmin, onPlay, onDelete }) {
         })
     }
 
+    const [imgError, setImgError] = useState(false)
+
+    // Helper to determine thumbnail URL
+    const getThumbnailUrl = (url) => {
+        if (url && url.includes('cloudinary')) {
+            return `${url.replace('/upload/', '/upload/w_400,h_225,c_fill/')}.jpg`
+        }
+        return null
+    }
+
+    const thumbnailUrl = getThumbnailUrl(video.secure_url)
+
     return (
         <Card className="group overflow-hidden rounded-xl border-0 shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 bg-white">
             {/* Video Thumbnail */}
-            <div className="relative aspect-video bg-gray-100 overflow-hidden">
-                <img
-                    src={`${video.secure_url.replace('/upload/', '/upload/w_400,h_225,c_fill/')}.jpg`}
-                    alt={video.title}
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                    onError={(e) => {
-                        e.target.src = 'https://via.placeholder.com/400x225/1e293b/ffffff?text=Video'
-                    }}
-                />
+            <div className="relative aspect-video bg-gray-900 overflow-hidden flex items-center justify-center">
+                {thumbnailUrl && !imgError ? (
+                    <img
+                        src={thumbnailUrl}
+                        alt={video.title}
+                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                        onError={() => setImgError(true)}
+                    />
+                ) : (
+                    <div className="flex flex-col items-center justify-center text-slate-600 gap-2">
+                        <Video className="w-12 h-12 opacity-50" />
+                    </div>
+                )}
 
                 {/* Play Overlay */}
                 <div
@@ -46,7 +63,7 @@ function VideoCard({ video, isAdmin, onPlay, onDelete }) {
                 </div>
 
                 {/* Duration Badge */}
-                {video.duration && (
+                {video.duration > 0 && (
                     <Badge variant="secondary" className="absolute bottom-2 right-2 bg-black/70 hover:bg-black/80 text-white border-0 gap-1 text-[10px] h-5 px-1.5">
                         <Clock className="w-3 h-3" />
                         {formatDuration(video.duration)}
