@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import axios from 'axios'
+import api from '../lib/api'
 import Header from '../components/Header'
 import VideoCard from '../components/VideoCard'
 import VideoUpload from '../components/VideoUpload'
@@ -10,8 +10,17 @@ import { useAuth } from '../context/AuthContext'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
-
-const API_URL = import.meta.env.VITE_API_URL
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+import { toast } from "sonner"
 
 function Dashboard() {
     const { user } = useAuth()
@@ -26,9 +35,6 @@ function Dashboard() {
     // Determine user role (ensure user object exists)
     const userRole = user?.role || 'user'
     const isAdmin = userRole === 'admin'
-
-    // Helper to get token for requests
-    const getToken = () => localStorage.getItem('token')
 
     useEffect(() => {
         fetchVideos()
@@ -49,12 +55,7 @@ function Dashboard() {
     const fetchVideos = async () => {
         try {
             setLoading(true)
-            const token = getToken()
-            const response = await axios.get(`${API_URL}/videos`, {
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
-            })
+            const response = await api.get('/videos')
             setVideos(response.data)
             setFilteredVideos(response.data)
         } catch (error) {
@@ -69,20 +70,26 @@ function Dashboard() {
         fetchVideos()
     }
 
-    const handleDeleteVideo = async (publicId) => {
-        if (!confirm('Are you sure you want to delete this video?')) return
+    const [deleteVideoId, setDeleteVideoId] = useState(null)
+
+    // ... (rest of logic)
+
+    const handleDeleteClick = (publicId) => {
+        setDeleteVideoId(publicId)
+    }
+
+    const confirmDelete = async () => {
+        if (!deleteVideoId) return
 
         try {
-            const token = getToken()
-            await axios.delete(`${API_URL}/videos/${publicId}`, {
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
-            })
+            await api.delete(`/videos/${deleteVideoId}`)
+            toast.success("Video deleted successfully")
             fetchVideos()
         } catch (error) {
             console.error('Error deleting video:', error)
-            alert('Failed to delete video')
+            toast.error("Failed to delete video")
+        } finally {
+            setDeleteVideoId(null)
         }
     }
 
@@ -165,7 +172,7 @@ function Dashboard() {
                                 video={video}
                                 isAdmin={isAdmin}
                                 onPlay={() => setSelectedVideo(video)}
-                                onDelete={() => handleDeleteVideo(video.public_id)}
+                                onDelete={() => handleDeleteClick(video.public_id)}
                             />
                         ))}
                     </div>
@@ -188,6 +195,25 @@ function Dashboard() {
                     onVideoUploaded={handleVideoUploaded}
                 />
             )}
+
+            {/* Delete Confirmation Dialog */}
+            <AlertDialog open={!!deleteVideoId} onOpenChange={() => setDeleteVideoId(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            This action cannot be undone. This will permanently delete the video
+                            from our servers.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                            Delete Video
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     )
 }

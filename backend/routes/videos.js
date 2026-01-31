@@ -79,12 +79,11 @@ router.post('/upload', requireAuth, requireAdmin, upload.single('video'), async 
         // Write file buffer to disk
         await fs.writeFile(filePath, req.file.buffer);
 
-        // Construct local URL
-        // Note: Assuming backend runs on port 5001 based on current setup
-        const PORT = process.env.PORT || 5001;
+        // Construct URL based on current environment
+        const baseUrl = `${req.protocol}://${req.get('host')}`;
         const result = {
             public_id: fileName,
-            secure_url: `http://localhost:${PORT}/uploads/${fileName}`,
+            secure_url: `${baseUrl}/uploads/${fileName}`,
             duration: 0, // Duration calculation skipped
             format: 'mp4'
         };

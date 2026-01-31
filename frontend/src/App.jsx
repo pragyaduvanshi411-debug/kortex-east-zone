@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
+import { Toaster } from "@/components/ui/sonner"
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import './App.css'
@@ -28,6 +29,7 @@ function App() {
                     />
                     <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
+                <Toaster />
             </Router>
         </AuthProvider>
     )

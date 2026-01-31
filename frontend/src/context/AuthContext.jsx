@@ -1,13 +1,11 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../lib/api';
 
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
-
-    const API_URL = import.meta.env.VITE_API_URL;
 
     useEffect(() => {
         checkAuth();
@@ -21,9 +19,10 @@ export const AuthProvider = ({ children }) => {
         }
 
         try {
-            const response = await axios.get(`${API_URL}/auth/me`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            // Interceptor handles the token now, but we can keep it explicit or rely on interceptor.
+            // Since we just added interceptor, let's rely on it or just pass it for double safety if we want, 
+            // but the goal is cleanup. The interceptor adds Authorization header if token exists in localStorage.
+            const response = await api.get('/auth/me');
             setUser(response.data);
         } catch (error) {
             console.error('Auth check failed:', error);
@@ -35,7 +34,7 @@ export const AuthProvider = ({ children }) => {
 
     const login = async (username, password) => {
         try {
-            const response = await axios.post(`${API_URL}/auth/login`, {
+            const response = await api.post('/auth/login', {
                 username,
                 password
             });

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import axios from 'axios'
+import api from '../lib/api'
 import { Upload, X, Film, FileVideo } from 'lucide-react'
 import {
     Dialog,
@@ -13,8 +13,6 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Progress } from "@/components/ui/progress"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-
-const API_URL = import.meta.env.VITE_API_URL
 
 function VideoUpload({ open, onOpenChange, onVideoUploaded }) {
     const [title, setTitle] = useState('')
@@ -59,14 +57,13 @@ function VideoUpload({ open, onOpenChange, onVideoUploaded }) {
         setError('')
 
         try {
-            const token = localStorage.getItem('token')
             const formData = new FormData()
             formData.append('video', file)
             formData.append('title', title)
 
-            await axios.post(`${API_URL}/videos/upload`, formData, {
+            // api interceptor handles the token
+            await api.post('/videos/upload', formData, {
                 headers: {
-                    Authorization: `Bearer ${token}`,
                     'Content-Type': 'multipart/form-data'
                 },
                 onUploadProgress: (progressEvent) => {
