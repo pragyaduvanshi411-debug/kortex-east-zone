@@ -23,7 +23,22 @@ const app = express();
 const PORT = process.env.PORT || 10000;
 
 // Middleware
-app.use(cors());
+// Allow browsers to access localhost from public sites (like Vercel)
+app.use((req, res, next) => {
+    if (req.headers['access-control-request-private-network']) {
+        res.setHeader('Access-Control-Allow-Private-Network', 'true');
+    }
+    // Also allow the response for the actual request
+    if (req.method === 'OPTIONS') {
+        res.setHeader('Access-Control-Allow-Private-Network', 'true');
+    }
+    next();
+});
+
+app.use(cors({
+    origin: '*', // Allow all origins for easier debugging
+    credentials: true
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static('uploads'));

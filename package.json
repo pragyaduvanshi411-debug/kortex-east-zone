@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "npm install && npm install --prefix frontend && npm run build --prefix frontend",
-    "start": "node backend/server.js"
+    "start": "npm start --prefix backend"
   },
   "dependencies": {
     "@clerk/clerk-sdk-node": "^5.0.0",
